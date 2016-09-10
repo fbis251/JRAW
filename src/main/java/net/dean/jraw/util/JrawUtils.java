@@ -157,6 +157,21 @@ public final class JrawUtils {
     }
 
     /**
+     * Prepends "/domain/{domain}" to {@code path} if {@code domain} is not null
+     * @param domain The domain to use
+     * @param path The path to use
+     * @return "/r/{domain}/{path}" if {@code domain} is not null, otherwise "{path}"
+     */
+    public static String getDomainPath(String domain, String path) {
+        // TODO: Null domain should return an error, invalid api endpoints
+        if (domain != null) {
+            path = "/domain/" + domain + path;
+        }
+
+        return path;
+    }
+
+    /**
      * Serializes an object into a JSON string
      * @return The JSON interpretation of the object
      */
