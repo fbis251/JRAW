@@ -25,15 +25,18 @@ allprojects {
 }
 
 dependencies {
-    def okHttpVersion = '3.1.2'
+    def okHttpVersion = '3.6.0'
     compile     "com.squareup.okhttp3:okhttp:$okHttpVersion"
     compile     "com.squareup.okhttp3:okhttp-urlconnection:$okHttpVersion"
-    compile     'com.fasterxml.jackson.core:jackson-databind:2.6.0'
-    compile     'com.google.guava:guava:19.0'
-    compile     'org.slf4j:slf4j-api:1.7.13'
-    testCompile 'org.slf4j:slf4j-simple:1.7.13'
-    testCompile 'org.testng:testng:6.9.10'
-    testCompile 'net.sourceforge.htmlunit:htmlunit:2.19'
+    compile     'com.fasterxml.jackson.core:jackson-databind:2.8.8'
+    // Guava 21.0 requires Java 8, but "Guava 22.0 and on will introduce a Java 6/Android compatible backport of Guava
+    // that includes all of the latest changes that don't require Java 8"
+    compile     'com.google.guava:guava:20.0'
+    compile     'org.slf4j:slf4j-api:1.7.25'
+    testCompile 'org.slf4j:slf4j-simple:1.7.25'
+    testCompile 'org.testng:testng:6.11'
+    // HtmlUnit 2.25 requires Java 8
+    testCompile 'net.sourceforge.htmlunit:htmlunit:2.24'
 }
 
 // Add the generated source to the main Java source directories
@@ -60,9 +63,11 @@ task sourcesJar(type: Jar, dependsOn: classes) {
     from sourceSets.main.allSource
 }
 
-task renamePom(dependsOn: 'generatePomFileForMavenPublication') << {
-    println(file('build/publications/maven/pom-default.xml'))
-    file('build/publications/maven/pom-default.xml').renameTo("build/publications/maven/JRAW-${version}.pom")
+task renamePom(dependsOn: 'generatePomFileForMavenPublication') {
+    doLast {
+        println(file('build/publications/maven/pom-default.xml'))
+        file('build/publications/maven/pom-default.xml').renameTo("build/publications/maven/JRAW-${version}.pom")
+    }
 }
 
 task release(type: Jar, dependsOn: ['fatJar', 'javadocJar', 'sourcesJar', 'renamePom']) {
@@ -82,6 +87,9 @@ test {
     testLogging {
         // Show stderr and stdout (useful for exceptions)
         showStandardStreams = true
+        // Show failed tests
+        events "failed"
+        exceptionFormat "short"
     }
 
     beforeTest { descriptor ->
@@ -119,6 +127,6 @@ artifacts {
 defaultTasks "test"
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '2.13'
+    gradleVersion = '3.5'
     distributionUrl = "https://services.gradle.org/distributions/gradle-$gradleVersion-all.zip"
 }

@@ -98,15 +98,19 @@ public class RedditClient extends RestClient {
         if (authData.getAuthenticationMethod() == null ||
                 authData.getScopes() == null ||
                 authData.getAccessToken() == null ||
-                authData.getExpirationDate() == null)
+                authData.getExpirationDurationMillis() == null)
             throw new NullPointerException("Missing important data from OAuth JSON: " + authData.getDataNode());
 
         this.authMethod = authData.getAuthenticationMethod();
         this.authData = authData;
         httpAdapter.getDefaultHeaders().put(HEADER_AUTHORIZATION, "bearer " + authData.getAccessToken());
 
-        if (authListener != null)
+        if (!authMethod.isUserless() && isAuthorizedFor(Endpoints.OAUTH_ME)) {
+            this.authenticatedUser = me().getFullName();
+        }
+        if (authListener != null) {
             authListener.onAuthenticated(authData);
+        }
     }
 
     /**
@@ -119,6 +123,10 @@ public class RedditClient extends RestClient {
         authData = null;
         httpAdapter.getDefaultHeaders().remove(HEADER_AUTHORIZATION);
         authMethod = AuthenticationMethod.NOT_YET;
+
+        if (authListener != null) {
+            authListener.onDeauthenticated();
+        }
     }
 
     /**
