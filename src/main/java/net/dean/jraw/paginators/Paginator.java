@@ -38,6 +38,7 @@ public abstract class Paginator<T extends Thing> implements RedditIterable<T> {
     protected Listing<T> current;
     private int pageNumber;
     private ListingIterator iterator;
+    private String after;
 
     private boolean started;
     private boolean changed;
@@ -81,7 +82,9 @@ public abstract class Paginator<T extends Thing> implements RedditIterable<T> {
         Map<String, String> args = new HashMap<>();
         if (includeLimit)
             args.put("limit", String.valueOf(limit));
-        if (current != null && current.getAfter() != null)
+        if (after != null)
+            args.put("after", after);
+        else if (current != null && current.getAfter() != null)
             args.put("after", current.getAfter());
 
         String sorting = getSortingString();
@@ -114,6 +117,7 @@ public abstract class Paginator<T extends Thing> implements RedditIterable<T> {
         response = reddit.execute(request);
         Listing<T> listing = parseListing(response);
         this.current = listing;
+        after = current.getAfter();
         pageNumber++;
 
         if (!started) {
@@ -175,6 +179,17 @@ public abstract class Paginator<T extends Thing> implements RedditIterable<T> {
     @Override
     public boolean hasStarted() {
         return started;
+    }
+
+    /**
+     * Sets the after parameter for the Paginator. This is useful when you re-instantiate the
+     * Paginator and would like to continue paginating a listing from where you left off before. You
+     * can get the current after parameter of a Listing via {@link Listing#getAfter()}
+     *
+     * @param after The after parameter to use with the next request
+     */
+    public void setAfter(String after) {
+        this.after = after;
     }
 
     /**
